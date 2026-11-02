@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finalizar compra | Casa do Construtor</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="checkout.css">
+<script src="/tracking.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></g></symbol>
+</svg>
+
+<header class="hd"><div class="wrap hd-in">
+  <a href="/" class="brand" aria-label="Casa do Construtor — início"><img src="/assets/logo.png" alt="Casa do Construtor"></a>
+  <span class="secure"><svg class="ic"><use href="#i-lock"/></svg> Compra segura</span>
+</div></header>
+
+<main class="wrap main">
+
+  <!-- Pagamento confirmado -->
+  <section class="panel" data-view="paid" hidden>
+    <div class="okball">✓</div>
+    <h1>Pagamento confirmado!</h1>
+    <p>Recebemos o seu <span id="paidWith">PIX</span> de <b id="paidAmount"></b>. Em breve você receberá as informações do pedido no e-mail <b id="paidEmail"></b>.</p>
+    <a id="paidWhats" class="link" target="_blank" rel="noreferrer" hidden>Falar com o atendimento</a>
+    <a href="/" class="btn block">Voltar para a loja</a>
+  </section>
+
+  <!-- Falhou / expirou -->
+  <section class="panel" data-view="failed" hidden>
+    <h1 id="failTitle">PIX expirado ou cancelado</h1>
+    <p id="failText">Não identificamos o pagamento. Você pode gerar um novo PIX.</p>
+    <button type="button" id="retry" class="btn block">Gerar novo PIX</button>
+  </section>
+
+  <!-- Cartão em análise -->
+  <section class="panel" data-view="cardwait" hidden>
+    <div class="spin"></div>
+    <h1>Confirmando seu pagamento…</h1>
+    <p>Estamos aguardando a confirmação do seu cartão. Não feche esta página: ela atualiza sozinha.</p>
+  </section>
+
+  <!-- PIX gerado -->
+  <section class="layout pixlayout" data-view="pix" hidden>
+    <div class="panel pixbox">
+      <h1>Pague com PIX</h1>
+      <p>Abra o app do seu banco, escolha <b>PIX</b> e escaneie o QR Code ou use o código copia e cola.</p>
+      <p class="pixamount" id="pixAmount"></p>
+      <canvas id="qr" class="qr" width="280" height="280" aria-label="QR Code PIX"></canvas>
+      <textarea id="pixCode" readonly rows="3"></textarea>
+      <button type="button" id="copy" class="btn block">Copiar código PIX</button>
+      <p class="wait"><span class="dot"></span> Aguardando pagamento… esta tela atualiza sozinha.</p>
+      <p class="mut small" id="pixExp"></p>
+    </div>
+    <aside class="summary" data-summary></aside>
+  </section>
+
+  <!-- Formulário em 3 etapas -->
+  <section data-view="form">
+    <div class="timer" role="timer" aria-live="off">
+      <span>Você tem</span><b id="tm">10:00</b><span>para finalizar sua compra</span>
+    </div>
+
+    <form id="form" novalidate class="layout">
+      <div class="col">
+        <ol class="steps" aria-label="Etapas da compra" id="steps">
+          <li data-n="1"><span class="num">1</span><span class="lbl">Entrega</span></li>
+          <li data-n="2"><span class="num">2</span><span class="lbl">Seus dados</span></li>
+          <li data-n="3"><span class="num">3</span><span class="lbl">Pagamento</span></li>
+        </ol>
+
+        <!-- Etapa 1: entrega -->
+        <section class="card" data-stage="1">
+          <h2>Para onde vamos enviar?</h2>
+          <p class="mut small">Digite o CEP para ver a opção de frete.</p>
+          <div class="grid6">
+            <div class="f c3"><label for="cep">CEP <span class="mut" id="cepBusy" hidden>buscando…</span></label>
+              <input id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000"><small class="e"></small></div>
+          </div>
+
+          <div id="shipBox" hidden>
+            <h3>Frete</h3>
+            <div class="opts" id="shipList" role="radiogroup" aria-label="Opções de frete"></div>
+
+            <h3>Endereço de entrega</h3>
+            <div class="grid6">
+              <div class="f c4"><label for="street">Rua / Avenida</label><input id="street" autocomplete="address-line1"><small class="e"></small></div>
+              <div class="f c2"><label for="number">Número</label><input id="number"><small class="e"></small></div>
+              <div class="f c6"><label for="complement">Complemento (opcional)</label><input id="complement"><small class="e"></small></div>
+              <div class="f c3"><label for="neighborhood">Bairro</label><input id="neighborhood"><small class="e"></small></div>
+              <div class="f c2"><label for="city">Cidade</label><input id="city" autocomplete="address-level2"><small class="e"></small></div>
+              <div class="f c1"><label for="state">UF</label><input id="state" maxlength="2" autocomplete="address-level1"><small class="e"></small></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Etapa 2: dados -->
+        <section class="card" data-stage="2" hidden>
+          <h2>Seus dados</h2>
+          <p class="mut small">Usamos para emitir o pedido e avisar sobre a entrega.</p>
+          <div class="grid2">
+            <div class="f c-all"><label for="name">Nome completo</label><input id="name" autocomplete="name"><small class="e"></small></div>
+            <div class="f"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" inputmode="email"><small class="e"></small></div>
+            <div class="f"><label for="phone">Telefone / WhatsApp</label><input id="phone" autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000"><small class="e"></small></div>
+            <div class="f c-all"><label for="cpf">CPF</label><input id="cpf" inputmode="numeric" placeholder="000.000.000-00"><small class="e"></small></div>
+          </div>
+        </section>
+
+        <!-- Etapa 3: pagamento -->
+        <div data-stage="3" hidden>
+          <section class="card">
+            <h2>Pagamento</h2>
+            <p class="mut small">Confira os dados e escolha como pagar.</p>
+            <div class="review">
+              <div><div><b id="rvShip"></b><p id="rvAddr1"></p><p id="rvAddr2"></p></div><button type="button" class="edit" data-go="1">Editar</button></div>
+              <div><div><b id="rvName"></b><p id="rvContact"></p><p id="rvCpf"></p></div><button type="button" class="edit" data-go="2">Editar</button></div>
+            </div>
+
+            <div class="methods" id="methods" role="radiogroup" aria-label="Forma de pagamento" hidden>
+              <label class="m on" data-m="pix"><input type="radio" name="method" value="pix" checked><b>PIX</b><span>Aprovação na hora</span></label>
+              <label class="m" data-m="card"><input type="radio" name="method" value="card"><b>Cartão de crédito</b><span>À vista</span></label>
+            </div>
+
+            <p class="pixnote" id="pixNote"><span aria-hidden="true">⚡</span> Pagamento por PIX: aprovação na hora. O QR Code é gerado na próxima tela.</p>
+            <div id="cardBox" hidden>
+              <label for="card-element" class="lb">Dados do cartão</label>
+              <div id="card-element"></div>
+              <p class="mut xs" id="cardLoading">Carregando formulário seguro…</p>
+              <p class="e2" id="cardMsg" hidden></p>
+              <p class="mut xs"><svg class="ic"><use href="#i-lock"/></svg> Os dados do cartão são protegidos pelo processador de pagamento e não passam pelo nosso servidor.</p>
+            </div>
+          </section>
+
+          <section class="card bumps" id="bumpBox" hidden>
+            <h2>Aproveite e leve também</h2>
+            <p class="mut small">Marque para adicionar ao seu pedido.</p>
+            <div class="opts" id="bumpList"></div>
+          </section>
+        </div>
+
+        <p id="apiError" class="errbox" role="alert" hidden></p>
+
+        <div class="actions">
+          <button type="button" id="back" class="btn ghost" hidden>Voltar</button>
+          <button type="submit" id="next" class="btn grow">Continuar</button>
+        </div>
+        <p class="mut xs center" id="agree" hidden>Ao continuar você confirma que os dados informados estão corretos.</p>
+      </div>
+      <aside class="summary" data-summary></aside>
+    </form>
+  </section>
+</main>
+
+<script src="vendor/qrcode.js"></script>
+<script type="module" src="checkout.js"></script>
+</body>
+</html>
