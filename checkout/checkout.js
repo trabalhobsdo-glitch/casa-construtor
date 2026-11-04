@@ -111,8 +111,8 @@ function trackPurchase(cents) {
   window.fbq?.("track", "Purchase", pixelBase(cents), { eventID: "purchase_" + (S.waitId || offerId) });
   window.ttq?.track("CompletePayment", ttqContents(cents)); // CompletePayment = compra no TikTok
 }
-function trackPaymentInfo(cents) {
-  window.fbq?.("track", "AddPaymentInfo", pixelBase(cents));
+function trackPaymentInfo(cents, eventId) {
+  window.fbq?.("track", "AddPaymentInfo", pixelBase(cents), eventId ? { eventID: eventId } : undefined);
   window.ttq?.track("AddPaymentInfo", ttqContents(cents));
 }
 trackInitiate();
@@ -348,8 +348,7 @@ async function payPix() {
     showView("pix");
     startPolling("pix");
     // PIX gerado = dados de pagamento enviados (AddPaymentInfo). A venda (Purchase) só é marcada quando o pagamento é confirmado.
-    trackPaymentInfo(S.paidAmount);
-    trackPurchase(S.paidAmount); // marca a venda no Facebook assim que o PIX é gerado
+    trackPaymentInfo(S.paidAmount, "pay_" + S.waitId); // mesmo id do servidor: o Meta não conta 2x
   } catch (e) {
     showError(e instanceof Error ? e.message : "Erro inesperado. Tente novamente.");
   } finally { setLoading(false); }
