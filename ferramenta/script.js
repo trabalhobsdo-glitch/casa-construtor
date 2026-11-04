@@ -1,7 +1,7 @@
 /* ====== CONFIGURE AQUI ====== */
 const CONFIG = {
   checkoutUrl: "/checkout/?p=ferramenta", // checkout próprio da loja
-  precoKit: 147.90
+  precoKit: 97.90
 };
 /* ============================ */
 const $ = s => document.querySelector(s);
@@ -29,7 +29,7 @@ const lb = $("#lb");
 $("#rphotos").addEventListener("click",e=>{if(e.target.tagName!=="IMG") return; lb.querySelector("img").src=e.target.src; lb.showModal();});
 lb.addEventListener("click",e=>{if(e.target===lb || e.target.tagName==="BUTTON") lb.close();});
 
-// Oferta fixa: somente 1 kit por R$ 147,90
+// Oferta fixa: somente 1 kit por R$ 97,90
 const preco = CONFIG.precoKit.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const price = $("#price");
 if(price) price.textContent = preco;
