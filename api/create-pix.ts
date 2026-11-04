@@ -66,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!token) return res.status(500).json({ error: "Pagamento não configurado (UNIPAY_API_KEY ausente)." });
 
-  const { offerId, shipping, bumps, customer, address } = (req.body ?? {}) as any;
+  const { offerId, shipping, bumps, customer, address, fbp, fbc, sourceUrl } = (req.body ?? {}) as any;
   const offer = OFFERS[offerId];
   if (!offer) return res.status(400).json({ error: "Oferta inválida." });
 
@@ -125,6 +125,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     metadata: {
       oferta: String(offerId),
       frete: String(shipping),
+      fbp: String(fbp ?? "").slice(0, 120),
+      fbc: String(fbc ?? "").slice(0, 200),
+      url: String(sourceUrl ?? "").slice(0, 300),
+      ua: String(req.headers["user-agent"] ?? "").slice(0, 300),
+      ip: ip || "",
       ...(bumpIds.length ? { adicionais: bumpIds.join(",") } : {}),
     },
     pix: { expiresInDays: 1 },
