@@ -39,7 +39,7 @@ const BUMPS: Record<string, { title: string; priceCents: number }> = {};
 const sha = (v: unknown) => createHash("sha256").update(String(v ?? "").trim().toLowerCase()).digest("hex");
 async function sendMetaPurchase(id: string, amountCents: number, offerId: string, c: any, m: any) {
   const token = clean(process.env.META_CAPI_TOKEN);
-  const pixel = clean(process.env.META_PIXEL_ID) || "1620017232920631";
+  const pixel = clean(process.env.META_PIXEL_ID) || "1118077487471166";
   if (!token) { console.log("[meta] META_CAPI_TOKEN ausente — Purchase NÃO enviado pelo servidor"); return; }
   const ph = String(c?.phone ?? "").replace(/\D/g, "");
   const body = { data: [{
