@@ -1,43 +1,54 @@
-// Configuração do checkout da Casa do Construtor.
-// ⚠️ Os preços também existem em api/create-pix.ts e api/create-card.ts:
-// o SERVIDOR é quem manda no valor cobrado. Se mudar um preço, mude nos 3 lugares.
-
-export const STORE = {
-  name: "Casa do Construtor",
-  whatsapp: "", // Ex.: "5518999999999". Se vazio, o botão de WhatsApp não aparece.
-  email: "",    // E-mail de atendimento (opcional)
+/* ====== CONFIGURE AQUI ====== */
+const CONFIG = {
+  checkoutUrl: "/checkout/?p=ferramenta", // checkout próprio da loja
+  precoKit: 97.90
 };
+/* ============================ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
 
-// Ofertas. O id é o que a página do produto manda: /checkout/?p=ferramenta  ou  /checkout/?p=luminaria&qtd=1..4
-export const OFFERS = {
-  ferramenta: {
-    id: "ferramenta", name: "Kit 4 em 1 Ferramentas 48V", short: "1 kit com maleta",
-    priceCents: 14790, qty: 1, img: "/ferramenta/assets/p1.webp", back: "/ferramenta/",
-  },
-  "luminaria-1": {
-    id: "luminaria-1", name: "Kit 2 Luminárias Poste Solar 2200W", short: "Compre 1 Leve 2 · 2 luminárias",
-    priceCents: 9700, qty: 2, img: "/luminaria/assets/p1.webp", back: "/luminaria/",
-  },
-  "luminaria-2": {
-    id: "luminaria-2", name: "Kit 4 Luminárias Poste Solar 2200W", short: "Compre 2 Leve 4 · 4 luminárias",
-    priceCents: 13790, qty: 4, img: "/luminaria/assets/p1.webp", back: "/luminaria/",
-  },
-  "luminaria-3": {
-    id: "luminaria-3", name: "Kit 6 Luminárias Poste Solar 2200W", short: "Compre 3 Leve 6 · 6 luminárias",
-    priceCents: 15790, qty: 6, img: "/luminaria/assets/p1.webp", back: "/luminaria/",
-  },
-  "luminaria-4": {
-    id: "luminaria-4", name: "Kit 8 Luminárias Poste Solar 2200W", short: "Compre 4 Leve 8 · 8 luminárias",
-    priceCents: 17790, qty: 8, img: "/luminaria/assets/p1.webp", back: "/luminaria/",
-  },
-};
+// Galeria principal
+const imgs = Array.from({length:10},(_,i)=>`assets/p${i+1}.webp`);
+let cur = 0;
+$("#thumbs").innerHTML = imgs.map((s,i)=>`<button class="${i?"":"on"}" data-i="${i}" aria-label="Foto ${i+1}"><img src="${s}" alt="" loading="lazy"></button>`).join("");
+function show(i){
+  cur = (i+imgs.length)%imgs.length;
+  $("#mainImg").src = imgs[cur];
+  $("#count").textContent = (cur+1)+" / "+imgs.length;
+  $$("#thumbs button").forEach((b,k)=>b.classList.toggle("on",k===cur));
+}
+$("#thumbs").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) show(+b.dataset.i);});
+$("#thumbs").addEventListener("mouseover",e=>{const b=e.target.closest("button"); if(b && matchMedia("(hover:hover)").matches) show(+b.dataset.i);});
+$("#prev").onclick = ()=>show(cur-1);
+$("#next").onclick = ()=>show(cur+1);
 
-// Frete grátis pelos Correios. Confirme o prazo real antes de publicar.
-export const SHIPPING = {
-  correios: { id: "correios", name: "Correios", priceCents: 0, days: "5 a 8 dias úteis", logo: "/ferramenta/assets/correios.png" },
-};
+// 12 fotos exibidas junto das opiniões
+const fotos = Array.from({length:12},(_,i)=>`assets/kit-foto-${i+1}.webp`);
+$("#rphotos").innerHTML = fotos.map((s,i)=>`<img src="${s}" alt="Foto de comprador ${i+1}" loading="lazy">`).join("");
+const lb = $("#lb");
+$("#rphotos").addEventListener("click",e=>{if(e.target.tagName!=="IMG") return; lb.querySelector("img").src=e.target.src; lb.showModal();});
+lb.addEventListener("click",e=>{if(e.target===lb || e.target.tagName==="BUTTON") lb.close();});
 
-// Order bumps ("Aproveite e leve também"). Vazio = a seção não aparece.
-// Para ativar, adicione aqui e em api/create-pix.ts e api/create-card.ts. Exemplo:
-//   acessorio: { id: "acessorio", title: "Leve também ...", text: "Descrição curta.", priceCents: 1500, img: "/assets/acessorio.webp" },
-export const BUMPS = {};
+// Oferta fixa: somente 1 kit por R$ 97,90
+const preco = CONFIG.precoKit.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const price = $("#price");
+if(price) price.textContent = preco;
+$$(".pr").forEach(e=>e.textContent=preco);
+
+// Botões de compra
+const oferta=$("#comprar");
+const irParaOferta=()=>oferta.scrollIntoView({behavior:"smooth",block:"start"});
+function irParaCheckout(){
+  if(!CONFIG.checkoutUrl) return irParaOferta();
+  location.href=CONFIG.checkoutUrl;
+}
+$$("[data-buy]").forEach(b=>b.addEventListener("click",e=>{
+  e.preventDefault();
+  const r=oferta.getBoundingClientRect();
+  (r.top<innerHeight*.6 && r.bottom>innerHeight*.2) ? irParaCheckout() : irParaOferta();
+}));
+$$("[data-sticky]").forEach(b=>b.addEventListener("click",e=>{
+  e.preventDefault();
+  const r=oferta.getBoundingClientRect();
+  (r.top<innerHeight*.6 && r.bottom>innerHeight*.2) ? irParaCheckout() : irParaOferta();
+}));
