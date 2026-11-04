@@ -34,17 +34,16 @@ const SHIPPING: Record<string, { name: string; priceCents: number }> = {
 // Order bumps: vazio por enquanto. Para ativar, adicione aqui E em checkout/config.js.
 const BUMPS: Record<string, { title: string; priceCents: number }> = {};
 
-// Envia AddPaymentInfo (PIX gerado) ao Meta direto do servidor (Conversions API).
-// O Purchase só é enviado quando o PIX é PAGO (api/webhook.ts).
+// Envia a compra ao Meta direto do servidor (Conversions API) assim que o PIX é gerado.
 // Variáveis na Vercel: META_CAPI_TOKEN (obrigatória) e META_PIXEL_ID (opcional).
 const sha = (v: unknown) => createHash("sha256").update(String(v ?? "").trim().toLowerCase()).digest("hex");
-async function sendMetaEvent(eventName: string, eventId: string, amountCents: number, offerId: string, c: any, m: any) {
+async function sendMetaPurchase(id: string, amountCents: number, offerId: string, c: any, m: any) {
   const token = clean(process.env.META_CAPI_TOKEN);
   const pixel = clean(process.env.META_PIXEL_ID) || "1620017232920631";
-  if (!token) { console.log("[meta] META_CAPI_TOKEN ausente — evento NÃO enviado pelo servidor"); return; }
+  if (!token) { console.log("[meta] META_CAPI_TOKEN ausente — Purchase NÃO enviado pelo servidor"); return; }
   const ph = String(c?.phone ?? "").replace(/\D/g, "");
   const body = { data: [{
-    event_name: eventName, event_time: Math.floor(Date.now() / 1000), event_id: eventId,
+    event_name: "Purchase", event_time: Math.floor(Date.now() / 1000), event_id: "purchase_" + id,
     action_source: "website", event_source_url: m.url || undefined,
     user_data: {
       em: c?.email ? [sha(c.email)] : undefined,
@@ -59,7 +58,7 @@ async function sendMetaEvent(eventName: string, eventId: string, amountCents: nu
     const r = await fetch(`https://graph.facebook.com/v21.0/${pixel}/events?access_token=${encodeURIComponent(token)}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
-    console.log("[meta]", eventName, eventId, r.status, (await r.text()).slice(0, 300));
+    console.log("[meta] Purchase (PIX gerado)", id, r.status, (await r.text()).slice(0, 300));
   } catch (e) { console.error("[meta] falha", e); }
 }
 
@@ -188,7 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error("Resposta inesperada da Unipay", JSON.stringify(json));
       return res.status(502).json({ error: "Resposta inesperada do gateway de pagamento." });
     }
-    await sendMetaEvent("AddPaymentInfo", "pay_" + String(tx.id), Number(tx.amount ?? amount), String(offerId), customer, { fbp: String(fbp ?? ""), fbc: String(fbc ?? ""), url: String(sourceUrl ?? ""), ua: String(req.headers["user-agent"] ?? ""), ip });
+    await sendMetaPurchase(String(tx.id), Number(tx.amount ?? amount), String(offerId), customer, { fbp: String(fbp ?? ""), fbc: String(fbc ?? ""), url: String(sourceUrl ?? ""), ua: String(req.headers["user-agent"] ?? ""), ip });
     return res.status(200).json({
       id: tx.id,
       qrcode,
