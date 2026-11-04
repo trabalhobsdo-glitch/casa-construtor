@@ -1,7 +1,7 @@
 // Pixels (Meta e TikTok) + registro de movimentação do site (/api/track).
 // Cole os IDs abaixo. Se um ID ficar vazio, aquele pixel simplesmente não carrega.
 (function () {
-  var META_PIXEL_ID = "";   // ex.: "1234567890123456"
+  var META_PIXEL_ID = "1620017232920631";   // ex.: "1234567890123456"
   var TIKTOK_PIXEL_ID = ""; // ex.: "ABCDEF1234567890"
 
   if (META_PIXEL_ID) {
@@ -26,6 +26,26 @@
       ttq.page();
     }(window, document, 'ttq');
   }
+
+  // ---- Eventos extras do Meta Pixel: páginas, produto e todos os cliques ----
+  function fb() { if (window.fbq) window.fbq.apply(null, arguments); }
+  var path = location.pathname;
+  var produto = null;
+  if (path.indexOf("/ferramenta") === 0) produto = { content_name: "Kit 4 em 1 Ferramentas 48V", content_ids: ["ferramenta"], value: 97.9 };
+  else if (path.indexOf("/luminaria") === 0) produto = { content_name: "Kit Luminárias Poste Solar", content_ids: ["luminaria"] };
+  if (produto) fb("track", "ViewContent", Object.assign({ content_type: "product", currency: "BRL" }, produto));
+
+  document.addEventListener("click", function (e) {
+    var el = e.target && e.target.closest && e.target.closest("button, a, [role=button], label");
+    if (!el) return;
+    var texto = ((el.innerText || el.getAttribute("aria-label") || el.id || "") + "").trim().replace(/\s+/g, " ").slice(0, 60);
+    if (!texto) return;
+    fb("trackCustom", "ButtonClick", { button_text: texto, page: path });
+    // Botões de compra viram AddToCart (na página do produto)
+    if (produto && (el.hasAttribute("data-buy") || el.hasAttribute("data-sticky") || /comprar|quero|levar/i.test(texto))) {
+      fb("track", "AddToCart", Object.assign({ content_type: "product", currency: "BRL" }, produto));
+    }
+  }, true);
 
   // Avisa o servidor (aparece nos Logs da Vercel): entrou, clicou, saiu. Nunca atrapalha o site.
   function send(data) {
