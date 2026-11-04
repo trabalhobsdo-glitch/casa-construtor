@@ -108,6 +108,10 @@ function trackPurchase(cents) {
   window.fbq?.("track", "Purchase", pixelBase(cents));
   window.ttq?.track("CompletePayment", ttqContents(cents)); // CompletePayment = compra no TikTok
 }
+function trackPaymentInfo(cents) {
+  window.fbq?.("track", "AddPaymentInfo", pixelBase(cents));
+  window.ttq?.track("AddPaymentInfo", ttqContents(cents));
+}
 trackInitiate();
 
 /* ---------- campos, máscaras e validação ---------- */
@@ -194,6 +198,7 @@ function renderBumps() {
 /* ---------- etapas ---------- */
 function goStage(n) {
   S.stage = n;
+  window.fbq?.("trackCustom", "CheckoutStep", { step: n });
   $("#apiError").hidden = true;
   $$("[data-stage]").forEach((el) => (el.hidden = Number(el.dataset.stage) !== n));
   $$("#steps li").forEach((li) => {
@@ -295,6 +300,7 @@ function setLoading(v) { S.loading = v; updateButton(); }
 
 async function payCard() {
   if (!S.els || !S.cardReady) { showError("O formulário do cartão ainda está carregando. Aguarde um instante."); return; }
+  trackPaymentInfo(totalCents());
   setLoading(true);
   let txId = "", txAmount = null;
   try {
@@ -335,8 +341,8 @@ async function payPix() {
     renderPix();
     showView("pix");
     startPolling("pix");
-    // Pixels (Meta e TikTok): venda marcada assim que o PIX é gerado (igual à Orbigel)
-    trackPurchase(S.paidAmount);
+    // PIX gerado = dados de pagamento enviados (AddPaymentInfo). A venda (Purchase) só é marcada quando o pagamento é confirmado.
+    trackPaymentInfo(S.paidAmount);
   } catch (e) {
     showError(e instanceof Error ? e.message : "Erro inesperado. Tente novamente.");
   } finally { setLoading(false); }
