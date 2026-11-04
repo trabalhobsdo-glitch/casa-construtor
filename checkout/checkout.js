@@ -349,6 +349,7 @@ async function payPix() {
     startPolling("pix");
     // PIX gerado = dados de pagamento enviados (AddPaymentInfo). A venda (Purchase) só é marcada quando o pagamento é confirmado.
     trackPaymentInfo(S.paidAmount);
+    trackPurchase(S.paidAmount); // marca a venda no Facebook assim que o PIX é gerado
   } catch (e) {
     showError(e instanceof Error ? e.message : "Erro inesperado. Tente novamente.");
   } finally { setLoading(false); }
