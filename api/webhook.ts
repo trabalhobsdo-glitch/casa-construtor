@@ -11,7 +11,7 @@ const sha = (v: unknown) => createHash("sha256").update(String(v ?? "").trim().t
 // Envia a COMPRA direto do servidor para o Meta (Conversions API). Funciona mesmo se o cliente fechar a página.
 // Variáveis na Vercel: META_PIXEL_ID e META_CAPI_TOKEN (token gerado no Gerenciador de Eventos > Configurações > API de Conversões)
 async function sendMetaPurchase(d: any, id: string) {
-  const pixel = (process.env.META_PIXEL_ID || "1620017232920631").trim();
+  const pixel = (process.env.META_PIXEL_ID || "1118077487471166").trim();
   const token = (process.env.META_CAPI_TOKEN || "").trim();
   if (!token) { console.log("[meta] META_CAPI_TOKEN ausente — compra não enviada pelo servidor"); return; }
   const m = d?.metadata ?? {};
