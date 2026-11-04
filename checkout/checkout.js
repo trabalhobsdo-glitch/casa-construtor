@@ -104,8 +104,11 @@ function trackInitiate() {
   window.fbq?.("track", "InitiateCheckout", pixelBase(offer.priceCents));
   window.ttq?.track("InitiateCheckout", ttqContents(offer.priceCents));
 }
+let purchaseSent = false;
 function trackPurchase(cents) {
-  window.fbq?.("track", "Purchase", pixelBase(cents));
+  if (purchaseSent) return; purchaseSent = true;
+  // eventID igual ao enviado pelo servidor (Conversions API) para o Meta não contar 2x
+  window.fbq?.("track", "Purchase", pixelBase(cents), { eventID: "purchase_" + (S.waitId || offerId) });
   window.ttq?.track("CompletePayment", ttqContents(cents)); // CompletePayment = compra no TikTok
 }
 function trackPaymentInfo(cents) {
@@ -293,6 +296,9 @@ function syncMethodUI() {
 /* ---------- envio do pedido ---------- */
 const orderBody = () => ({
   offerId, shipping: S.shipping, bumps: S.bumps,
+  fbp: (document.cookie.match(/(?:^|; )_fbp=([^;]+)/) || [])[1] || "",
+  fbc: (document.cookie.match(/(?:^|; )_fbc=([^;]+)/) || [])[1] || "",
+  sourceUrl: location.href,
   customer: { name: val("name"), email: val("email"), cpf: val("cpf"), phone: val("phone") },
   address: { cep: val("cep"), street: val("street"), number: val("number"), complement: val("complement"), neighborhood: val("neighborhood"), city: val("city"), state: val("state") },
 });
@@ -401,7 +407,7 @@ function startPolling(mode) {
       const { status } = await r.json();
       if (status === "paid" || status === "captured" || (mode === "pix" && status === "authorized")) {
         clearInterval(pollTimer);
-        if (mode === "cardwait") trackPurchase(S.paidAmount ?? totalCents());
+        trackPurchase(S.paidAmount ?? totalCents()); // PIX e cartão em análise
         showPaid();
       } else if (["refused", "canceled", "cancelled", "expired"].includes(status)) {
         clearInterval(pollTimer);
