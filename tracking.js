@@ -1,7 +1,7 @@
 // Pixels (Meta e TikTok) + registro de movimentação do site (/api/track).
 // Cole os IDs abaixo. Se um ID ficar vazio, aquele pixel simplesmente não carrega.
 (function () {
-  var META_PIXEL_ID = "1620017232920631";   // ex.: "1234567890123456"
+  var META_PIXEL_ID = "1118077487471166";   // ex.: "1234567890123456"
   var TIKTOK_PIXEL_ID = ""; // ex.: "ABCDEF1234567890"
 
   if (META_PIXEL_ID) {
