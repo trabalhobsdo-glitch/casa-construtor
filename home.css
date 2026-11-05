@@ -9,7 +9,13 @@ a{color:inherit}
 .mut{color:var(--mut)}
 :focus-visible{outline:3px solid var(--or);outline-offset:2px}
 
-.top{background:var(--ink);color:#d9dbde;font-size:.78rem;text-align:center;padding:7px 0}
+.top{background:#171b22;color:#fff;overflow:hidden;border-bottom:2px solid var(--or)}
+.ticker{height:38px;display:flex;align-items:center;overflow:hidden;white-space:nowrap}
+.ticker-track{display:flex;align-items:center;gap:28px;width:max-content;min-width:max-content;padding-left:24px;animation:tickerMove 38s linear infinite;font-size:.76rem;font-weight:800;letter-spacing:.045em}
+.ticker-track span{display:inline-flex;align-items:center;gap:7px}
+.ticker-track i{font-style:normal;color:#ff8a35;font-size:1rem}
+.ticker:hover .ticker-track{animation-play-state:paused}
+@keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .head{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
 .head .wrap{display:flex;align-items:center;gap:28px;height:64px}
 .brand img{height:46px;width:auto}
@@ -52,6 +58,8 @@ footer .wrap{display:flex;flex-direction:column;gap:12px}
 footer img{height:44px;width:auto;background:#fff;border-radius:4px;padding:4px 8px;align-self:flex-start}
 
 @media(max-width:760px){
+  .ticker{height:36px}
+  .ticker-track{font-size:.7rem;gap:20px;animation-duration:32s}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .banner{margin-top:12px;border-radius:8px}
   .col-title{font-size:1.2rem}
@@ -63,3 +71,4 @@ footer img{height:44px;width:auto;background:#fff;border-radius:4px;padding:4px 
   .about{grid-template-columns:1fr}
   .head nav{gap:16px}
 }
+@media(prefers-reduced-motion:reduce){.ticker-track{animation:none}}
