@@ -1,10 +1,10 @@
 // Pixels (Meta e TikTok) + registro de movimentação do site (/api/track).
 // Cole os IDs abaixo. Se um ID ficar vazio, aquele pixel simplesmente não carrega.
 (function () {
-  var META_PIXEL_ID = "1474529167889526";   // ex.: "1234567890123456"
+  var META_PIXEL_IDS = ["1474529167889526", "1620017232920631"]; // pode ter vários pixels do Meta; todos recebem os mesmos eventos
   var TIKTOK_PIXEL_ID = ""; // ex.: "ABCDEF1234567890"
 
-  if (META_PIXEL_ID) {
+  if (META_PIXEL_IDS.length) {
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -13,7 +13,7 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', META_PIXEL_ID);
+    for (var i = 0; i < META_PIXEL_IDS.length; i++) fbq('init', META_PIXEL_IDS[i]);
     fbq('track', 'PageView');
   }
 
