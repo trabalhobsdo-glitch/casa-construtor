@@ -252,3 +252,9 @@ dialog button{position:absolute;top:-14px;right:-14px;width:34px;height:34px;bor
   .review-score strong{font-size:2rem}
   .reviewer{align-items:flex-start;flex-direction:column;gap:0}
 }
+
+/* Logo centralizada no cabeçalho */
+.head .wrap{position:relative;justify-content:center}
+.head nav{position:absolute;right:16px;margin-left:0}
+.head .secure{position:absolute;left:16px}
+@media(max-width:1000px){.head nav{display:none}}
