@@ -1,6 +1,6 @@
 /* ====== CONFIGURE AQUI ====== */
 const CONFIG = {
-  checkoutUrl: "/checkout/?p=ferramenta", // checkout próprio da loja
+  checkoutUrl: "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052113717&store=40661", // checkout da Zedy
   precoKit: 97.90
 };
 /* ============================ */
