@@ -23,6 +23,7 @@ a{color:inherit}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .banner{display:block;margin-top:16px;border-radius:10px;overflow:hidden}
 .banner img{width:100%;height:auto}
+.banner-bottom{margin:8px 0 18px}
 .colecao{margin:26px 0 22px}
 .col-title{font-size:1.5rem;font-weight:800;line-height:1.2;margin-bottom:16px;padding-left:12px;border-left:4px solid var(--or)}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
