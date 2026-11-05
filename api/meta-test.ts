@@ -6,7 +6,7 @@ const clean = (v?: string) => (v ?? "").trim().replace(/^[\"']|[\"']$/g, "");
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = clean(process.env.META_CAPI_TOKEN);
-  const pixel = clean(process.env.META_PIXEL_ID) || "1118077487471166";
+  const pixel = clean(process.env.META_PIXEL_ID) || "1474529167889526";
   const out: Record<string, unknown> = { pixel, tokenConfigurado: !!token, tamanhoDoToken: token.length };
   if (!token) {
     out.resultado = "ERRO: a variável META_CAPI_TOKEN não chegou no site. Crie na Vercel e faça Redeploy.";
