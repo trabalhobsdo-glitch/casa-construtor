@@ -1,5 +1,12 @@
 /* ====== CONFIGURE AQUI ====== */
 const CONFIG = {
+  // checkout da Zedy, um link por opção: Compre 1 Leve 2, Compre 2 Leve 4, Compre 3 Leve 6, Compre 4 Leve 8
+  checkoutUrls: [
+    "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052146485&store=40661",
+    "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052179253&store=40661",
+    "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052212021&store=40661",
+    "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052244789&store=40661"
+  ],
   precos: [97.00, 137.90, 157.90, 177.90], // preço de cada opção: Compre 1 Leve 2, Compre 2 Leve 4, Compre 3 Leve 6, Compre 4 Leve 8
   precoDeKit: 450.02,         // preço "de" de 1 kit (riscado); nas outras opções é multiplicado pela quantidade
   parcelas: 10,
@@ -62,8 +69,9 @@ $("#tiers").onclick = e=>{ const b=e.target.closest("button"); if(!b) return; ki
 const oferta = $("#comprar");
 const irParaOferta = ()=>oferta.scrollIntoView({behavior:"smooth",block:"start"});
 function irParaCheckout(){
-  // checkout nativo do site: /checkout/?p=luminaria&qtd=1..4 (Compre 1 Leve 2 ... Compre 4 Leve 8)
-  location.href = "/checkout/?p=luminaria&qtd=" + kits;
+  const url = CONFIG.checkoutUrls[kits-1];
+  if(!url) return irParaOferta();
+  location.href = url;
 }
 $$("[data-buy]").forEach(b=>b.addEventListener("click",e=>{ e.preventDefault();
   // o botão do final da página volta para a oferta; o da oferta vai ao checkout
