@@ -113,7 +113,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const utmStr = buildUtm(utm, sourceUrl);
   const payload = {
     amount,
-    description: title,
     customer: {
       name: String(customer.name).trim(),
       document: cpf,
