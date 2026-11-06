@@ -1,6 +1,13 @@
 // Pixels (Meta e TikTok) + registro de movimentação do site (/api/track).
 // Cole os IDs abaixo. Se um ID ficar vazio, aquele pixel simplesmente não carrega.
 (function () {
+  // Guarda os parâmetros de rastreamento (utm_*, fbclid, ttclid, click_id...) da 1ª página para usar no checkout.
+  try {
+    var q = location.search.replace(/^\?/, "");
+    if (/(^|&)(utm_[a-z]+|fbclid|ttclid|click_id|gclid|src|sck)=/i.test(q)) sessionStorage.setItem("cc_utm", q);
+  } catch (e) {}
+})();
+(function () {
   var META_PIXEL_IDS = ["1474529167889526", "1620017232920631", "4728552630800226"]; // pode ter vários pixels do Meta; todos recebem os mesmos eventos
   var TIKTOK_PIXEL_ID = ""; // ex.: "ABCDEF1234567890"
 
