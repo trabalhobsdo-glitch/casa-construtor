@@ -1,6 +1,5 @@
 /* ====== CONFIGURE AQUI ====== */
 const CONFIG = {
-  checkoutUrl: "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052113717&store=40661", // checkout da Zedy
   precoKit: 97.90
 };
 /* ============================ */
@@ -39,8 +38,8 @@ $$(".pr").forEach(e=>e.textContent=preco);
 const oferta=$("#comprar");
 const irParaOferta=()=>oferta.scrollIntoView({behavior:"smooth",block:"start"});
 function irParaCheckout(){
-  if(!CONFIG.checkoutUrl) return irParaOferta();
-  location.href=CONFIG.checkoutUrl;
+  // checkout nativo do site
+  location.href="/checkout/?p=ferramenta";
 }
 $$("[data-buy]").forEach(b=>b.addEventListener("click",e=>{
   e.preventDefault();
