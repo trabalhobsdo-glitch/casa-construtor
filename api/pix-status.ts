@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Consulta de status de pagamento. Dois gateways:
-//   ?m=pix  -> PIX na Unipay (GET /api/user/transactions/:id)   [padrão do checkout para PIX]
+//   ?m=pix  -> PIX na Duttyfy (GET {DUTTYFY_API_URL}?transactionId=ID)   [padrão do checkout para PIX]
 //   (sem m) -> cartão em análise na Pagou (GET /v2/transactions/:id)
 // Status normalizados em minúsculas: paid, waiting_payment, refused, canceled, refunded...
 const clean = (v?: string) => (v ?? "").trim().replace(/^[\"']|[\"']$/g, "");
@@ -12,17 +12,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
 
   if (String(req.query.m ?? "") === "pix") {
-    const token = clean(process.env.UNIPAY_API_KEY || process.env.UNIPAY_SECRET_KEY);
-    if (!token) return res.status(500).json({ error: "Pagamento não configurado." });
-    const base = clean(process.env.UNIPAY_API_URL).replace(/\/+$/, "").replace(/\/api$/, "") || "https://api.unipaybr.com";
+    // PIX na Duttyfy: GET {URL_ENCRIPTADA}?transactionId={ID} -> { status: "PENDING" | "COMPLETED" }
+    const url = clean(process.env.DUTTYFY_API_URL || process.env.DUTTYFY_URL);
+    if (!url) return res.status(500).json({ error: "Pagamento não configurado." });
     try {
-      const r = await fetch(`${base}/api/user/transactions/${id}`, {
-        headers: { Authorization: `Basic ${Buffer.from(`x:${token}`).toString("base64")}` },
-      });
+      const u = new URL(url);
+      u.searchParams.set("transactionId", id);
+      const r = await fetch(u.toString());
       const json: any = await r.json().catch(() => ({}));
       if (!r.ok) return res.status(502).json({ error: "Não foi possível consultar o pagamento." });
       const tx = json?.data ?? json;
-      return res.status(200).json({ status: String(tx?.status ?? "").toLowerCase() });
+      const st = String(tx?.status ?? "").toUpperCase();
+      // Normaliza para o que o checkout entende: paid / waiting_payment
+      const status = st === "COMPLETED" ? "paid" : st === "PENDING" ? "waiting_payment" : st.toLowerCase();
+      return res.status(200).json({ status });
     } catch {
       return res.status(502).json({ error: "Falha ao consultar o pagamento." });
     }
