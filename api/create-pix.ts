@@ -1,20 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { isIP } from "node:net";
 import { createHash } from "node:crypto";
 
-// PIX via Unipay (plataforma FastSoft White Label; adquirente: Pagar.me).
-// Docs: https://developers.fastsoftbrasil.com
-// O CARTÃO fica na Pagou (api/create-card.ts) e não é afetado por este arquivo.
+// PIX via Duttyfy. O CARTÃO continua na Pagou (api/create-card.ts) e não é afetado por este arquivo.
 //
-// Variáveis de ambiente na Vercel:
-//   UNIPAY_API_KEY  -> chave secreta (Painel Unipay > Configurações > Chave de API) (obrigatória)
-//   UNIPAY_API_URL  -> opcional. Padrão: https://api.unipaybr.com
-//                      Se o diagnóstico (/api/create-pix?diag=1) mostrar 401/404, troque para https://api.fastsoftbrasil.com
+// Variável de ambiente na Vercel (obrigatória):
+//   DUTTYFY_API_URL -> a URL ENCRIPTADA gerada em Duttyfy > Chaves API > "Gerar URL encriptada".
+//                      Use a URL inteira (não a chave bruta). Ela é secreta: nunca coloque no código nem no navegador.
+// Opcionais (Meta Conversions API): META_CAPI_TOKEN e META_PIXEL_ID
 const clean = (v?: string) => (v ?? "").trim().replace(/^[\"']|[\"']$/g, "");
-const getToken = () => clean(process.env.UNIPAY_API_KEY || process.env.UNIPAY_SECRET_KEY);
-const getBase = () => clean(process.env.UNIPAY_API_URL).replace(/\/+$/, "").replace(/\/api$/, "") || "https://api.unipaybr.com";
-// Autenticação Basic: base64("x:CHAVE_SECRETA")
-const authHeader = (token: string) => ({ Authorization: `Basic ${Buffer.from(`x:${token}`).toString("base64")}` });
+const getUrl = () => clean(process.env.DUTTYFY_API_URL || process.env.DUTTYFY_URL);
 
 // ⚠️ Preços ficam no SERVIDOR: o cliente só envia o id da oferta.
 // Mantenha em sincronia com checkout/config.js e api/create-card.ts
@@ -26,7 +20,7 @@ const OFFERS: Record<string, { title: string; priceCents: number }> = {
   "luminaria-4": { title: "Kit 8 Luminárias Poste Solar 2200W (Compre 4 Leve 8)", priceCents: 17790 },
 };
 
-// Frete grátis pelos Correios (o item de frete só entra na cobrança se o valor for maior que zero).
+// Frete grátis pelos Correios (se um dia tiver valor, ele é somado ao total).
 const SHIPPING: Record<string, { name: string; priceCents: number }> = {
   correios: { name: "Frete Correios", priceCents: 0 },
 };
@@ -64,38 +58,33 @@ async function sendMetaPurchase(id: string, amountCents: number, offerId: string
 
 const digits = (v: unknown) => String(v ?? "").replace(/\D/g, "");
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const token = getToken();
-  const base = getBase();
+// Query string de rastreamento (utm_*, fbclid, ttclid, click_id...) no formato "a=1&b=2", sem "?".
+// Vem do navegador (body.utm); se faltar, tenta extrair da URL de origem.
+function buildUtm(rawUtm: unknown, sourceUrl: unknown): string {
+  let s = String(rawUtm ?? "").trim().replace(/^\?/, "");
+  if (!s) {
+    try { s = new URL(String(sourceUrl ?? "")).search.replace(/^\?/, ""); } catch { s = ""; }
+  }
+  // Remove parâmetros internos do próprio checkout (não são de rastreamento).
+  const p = new URLSearchParams(s);
+  ["p", "qtd"].forEach((k) => p.delete(k));
+  return p.toString().slice(0, 1500);
+}
 
-  // Diagnóstico: abra /api/create-pix?diag=1 no navegador. Nunca mostra a chave.
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const url = getUrl();
+
+  // Diagnóstico: abra /api/create-pix?diag=1 no navegador. Só confere se a variável existe; nunca mostra a URL.
   if (req.method === "GET" && req.query?.diag) {
-    const out: Record<string, unknown> = {
-      gateway: "unipay",
-      baseUrl: base,
-      tokenConfigured: !!token,
-      tokenLength: token.length,
-    };
-    if (token) {
-      // Testa o endereço configurado e o alternativo. 200 = chave OK | 401 = chave errada ou endereço errado
-      const probe = async (b: string) => {
-        try {
-          const r = await fetch(`${b}/api/user/wallet/balance`, { headers: authHeader(token) });
-          return r.status;
-        } catch { return "sem_conexao"; }
-      };
-      out.authStatus = await probe(base);
-      const alt = base.includes("fastsoftbrasil") ? "https://api.unipaybr.com" : "https://api.fastsoftbrasil.com";
-      out.alternativo = { baseUrl: alt, authStatus: await probe(alt) };
-    }
-    return res.status(200).json(out);
+    let host = "";
+    try { host = new URL(url).host; } catch { /* url inválida */ }
+    return res.status(200).json({ gateway: "duttyfy", urlConfigured: !!url, urlValida: !!host, host });
   }
 
   if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
+  if (!url) return res.status(500).json({ error: "Pagamento não configurado (DUTTYFY_API_URL ausente)." });
 
-  if (!token) return res.status(500).json({ error: "Pagamento não configurado (UNIPAY_API_KEY ausente)." });
-
-  const { offerId, shipping, bumps, customer, address, fbp, fbc, sourceUrl } = (req.body ?? {}) as any;
+  const { offerId, shipping, bumps, customer, address, fbp, fbc, sourceUrl, utm } = (req.body ?? {}) as any;
   const offer = OFFERS[offerId];
   if (!offer) return res.status(400).json({ error: "Oferta inválida." });
 
@@ -112,88 +101,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!ship) return res.status(400).json({ error: "Escolha uma opção de frete." });
   const bumpIds: string[] = Array.isArray(bumps) ? [...new Set<string>(bumps.map(String))].filter((b) => b in BUMPS) : [];
 
-  // O valor total é a soma dos itens; o frete entra como um item (e shipping.fee fica 0
-  // para o frete nunca ser cobrado duas vezes).
-  const items = [
-    { title: offer.title, unitPrice: offer.priceCents, quantity: 1, tangible: true, externalRef: String(offerId) },
-    ...bumpIds.map((b) => ({ title: BUMPS[b].title, unitPrice: BUMPS[b].priceCents, quantity: 1, tangible: true, externalRef: `bump-${b}` })),
-    ...(ship.priceCents > 0 ? [{ title: ship.name, unitPrice: ship.priceCents, quantity: 1, tangible: false, externalRef: `frete-${shipping}` }] : []),
-  ];
-  const amount = items.reduce((t, p) => t + p.unitPrice * p.quantity, 0);
+  // O valor total é calculado AQUI no servidor (em centavos): oferta + extras + frete.
+  const amount = offer.priceCents + bumpIds.reduce((t, b) => t + BUMPS[b].priceCents, 0) + ship.priceCents;
+  if (amount < 100) return res.status(400).json({ error: "Valor inválido." });
 
   const ip = String(req.headers["x-forwarded-for"] ?? "").split(",")[0].trim();
-  const host = String(req.headers["x-forwarded-host"] ?? req.headers.host ?? "").split(",")[0].trim();
-  const postbackUrl = host && !/localhost|127\.0\.0\.1/.test(host) ? `https://${host}/api/webhook` : undefined;
+
+  // O Duttyfy aceita UM item por cobrança: o título resume o pedido e o preço é o total.
+  const title = [offer.title, ...bumpIds.map((b) => BUMPS[b].title)].join(" + ").slice(0, 200);
 
   const payload = {
     amount,
-    paymentMethod: "PIX",
+    description: title,
     customer: {
       name: String(customer.name).trim(),
+      document: cpf,
       email: String(customer.email).trim(),
-      document: { number: cpf, type: "CPF" },
       phone,
     },
-    shipping: {
-      fee: 0,
-      address: {
-        street: String(address.street),
-        streetNumber: String(address.number),
-        ...(address.complement ? { complement: String(address.complement) } : {}),
-        zipCode: zip,
-        neighborhood: String(address.neighborhood),
-        city: String(address.city),
-        state: String(address.state).toUpperCase(),
-        country: "br",
-      },
-    },
-    items,
-    traceable: true,
-    ...(ip && isIP(ip) ? { ip } : {}),
-    ...(postbackUrl ? { postbackUrl } : {}),
-    metadata: {
-      oferta: String(offerId),
-      frete: String(shipping),
-      fbp: String(fbp ?? "").slice(0, 120),
-      fbc: String(fbc ?? "").slice(0, 200),
-      url: String(sourceUrl ?? "").slice(0, 300),
-      ua: String(req.headers["user-agent"] ?? "").slice(0, 300),
-      ip: ip || "",
-      ...(bumpIds.length ? { adicionais: bumpIds.join(",") } : {}),
-    },
-    pix: { expiresInDays: 1 },
+    item: { title, price: amount, quantity: 1 },
+    paymentMethod: "PIX",
+    utm: buildUtm(utm, sourceUrl),
   };
 
   try {
-    const r = await fetch(`${base}/api/user/transactions`, {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    const r = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeader(token) },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
+      signal: ctrl.signal,
+    }).finally(() => clearTimeout(timer));
     const json: any = await r.json().catch(() => ({}));
     if (!r.ok) {
-      console.error("Unipay error", r.status, JSON.stringify(json));
-      const detail = Array.isArray(json?.message) ? json.message.join("; ") : json?.message;
-      const msg = r.status === 401 || r.status === 403
+      console.error("Duttyfy error", r.status, JSON.stringify(json));
+      const detail = String(json?.error ?? json?.message ?? "");
+      const msg = r.status === 401 || r.status === 403 || /chave api/i.test(detail)
         ? "Pagamento temporariamente indisponível. Tente novamente em instantes."
-        : r.status === 400 || r.status === 422
-          ? `Confira os dados informados${detail ? ` (${String(detail).slice(0, 120)})` : ""}.`
-          : "Não foi possível gerar o PIX. Tente novamente.";
+        : /cpf/i.test(detail)
+          ? "CPF inválido. Confira e tente novamente."
+          : r.status === 400 || r.status === 422
+            ? `Confira os dados informados${detail ? ` (${detail.slice(0, 120)})` : ""}.`
+            : "Não foi possível gerar o PIX. Tente novamente.";
       return res.status(502).json({ error: msg });
     }
     const tx = json?.data ?? json;
-    const qrcode = tx?.pix?.qrcode ?? tx?.pix?.qrCode ?? tx?.pix?.qr_code;
-    if (!tx?.id || !qrcode) {
-      console.error("Resposta inesperada da Unipay", JSON.stringify(json));
+    const qrcode = tx?.pixCode ?? tx?.qrcode ?? tx?.qrCode;
+    const id = tx?.transactionId ?? tx?.id;
+    if (!id || !qrcode) {
+      console.error("Resposta inesperada da Duttyfy", JSON.stringify(json));
       return res.status(502).json({ error: "Resposta inesperada do gateway de pagamento." });
     }
-    await sendMetaPurchase(String(tx.id), Number(tx.amount ?? amount), String(offerId), customer, { fbp: String(fbp ?? ""), fbc: String(fbc ?? ""), url: String(sourceUrl ?? ""), ua: String(req.headers["user-agent"] ?? ""), ip });
+    await sendMetaPurchase(String(id), amount, String(offerId), customer, { fbp: String(fbp ?? ""), fbc: String(fbc ?? ""), url: String(sourceUrl ?? ""), ua: String(req.headers["user-agent"] ?? ""), ip });
+    // Mesmo formato que o checkout já espera (id, qrcode, amount, status).
     return res.status(200).json({
-      id: tx.id,
-      qrcode,
-      expirationDate: tx.pix?.expirationDate ?? null,
-      amount: tx.amount ?? amount,
-      status: String(tx.status ?? "waiting_payment").toLowerCase(),
+      id: String(id),
+      qrcode: String(qrcode),
+      expirationDate: null,
+      amount,
+      status: "waiting_payment",
     });
   } catch (e) {
     console.error(e);
