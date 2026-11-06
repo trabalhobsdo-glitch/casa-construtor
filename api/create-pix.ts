@@ -128,14 +128,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 20000);
+    const t0 = Date.now();
+    const timer = setTimeout(() => ctrl.abort(), 9000);
     const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       signal: ctrl.signal,
     }).finally(() => clearTimeout(timer));
-    const json: any = await r.json().catch(() => ({}));
+    const raw = await r.text();
+    let json: any = {};
+    try { json = JSON.parse(raw); } catch { /* resposta não-JSON */ }
+    console.log("Duttyfy resp", r.status, Date.now() - t0 + "ms", raw.slice(0, 300));
     if (!r.ok) {
       // Log sem dados pessoais: ajuda a diagnosticar (formato do telefone, tamanho do CPF, se tinha utm).
       console.error("Duttyfy error", r.status, JSON.stringify(json), JSON.stringify({
@@ -168,7 +172,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       status: "waiting_payment",
     });
   } catch (e) {
-    console.error(e);
-    return res.status(502).json({ error: "Falha de comunicação com o gateway de pagamento." });
+    const timeout = e instanceof Error && e.name === "AbortError";
+    console.error(timeout ? "Duttyfy TIMEOUT (sem resposta em 9s)" : "Duttyfy falha de rede", e);
+    return res.status(502).json({ error: timeout ? "O gateway de pagamento demorou para responder. Tente novamente." : "Falha de comunicação com o gateway de pagamento." });
   }
 }
