@@ -110,6 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // O Duttyfy aceita UM item por cobrança: o título resume o pedido e o preço é o total.
   const title = [offer.title, ...bumpIds.map((b) => BUMPS[b].title)].join(" + ").slice(0, 200);
 
+  const utmStr = buildUtm(utm, sourceUrl);
   const payload = {
     amount,
     description: title,
@@ -121,7 +122,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
     item: { title, price: amount, quantity: 1 },
     paymentMethod: "PIX",
-    utm: buildUtm(utm, sourceUrl),
+    // Só envia utm quando existe: campo vazio pode causar erro 500 no gateway.
+    ...(utmStr ? { utm: utmStr } : {}),
   };
 
   try {
@@ -135,7 +137,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }).finally(() => clearTimeout(timer));
     const json: any = await r.json().catch(() => ({}));
     if (!r.ok) {
-      console.error("Duttyfy error", r.status, JSON.stringify(json));
+      // Log sem dados pessoais: ajuda a diagnosticar (formato do telefone, tamanho do CPF, se tinha utm).
+      console.error("Duttyfy error", r.status, JSON.stringify(json), JSON.stringify({
+        amount, phoneLen: phone.length, phoneDDD: phone.slice(0, 2), cpfLen: cpf.length, temUtm: !!utmStr, titleLen: title.length,
+      }));
       const detail = String(json?.error ?? json?.message ?? "");
       const msg = r.status === 401 || r.status === 403 || /chave api/i.test(detail)
         ? "Pagamento temporariamente indisponível. Tente novamente em instantes."
