@@ -299,6 +299,7 @@ const orderBody = () => ({
   fbp: (document.cookie.match(/(?:^|; )_fbp=([^;]+)/) || [])[1] || "",
   fbc: (document.cookie.match(/(?:^|; )_fbc=([^;]+)/) || [])[1] || "",
   sourceUrl: location.href,
+  utm: (() => { try { return sessionStorage.getItem("cc_utm") || location.search.replace(/^\?/, ""); } catch { return location.search.replace(/^\?/, ""); } })(),
   customer: { name: val("name"), email: val("email"), cpf: val("cpf"), phone: val("phone") },
   address: { cep: val("cep"), street: val("street"), number: val("number"), complement: val("complement"), neighborhood: val("neighborhood"), city: val("city"), state: val("state") },
 });
