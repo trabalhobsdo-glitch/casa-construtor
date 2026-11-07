@@ -17,6 +17,7 @@ const getPublishable = () => clean(process.env.PAGOU_PUBLISHABLE_KEY || process.
 // ⚠️ Mantenha em sincronia com api/create-pix.ts e checkout/config.js
 const OFFERS: Record<string, { title: string; priceCents: number }> = {
   ferramenta: { title: "Kit 4 em 1 Ferramentas 48V com Maleta", priceCents: 9790 },
+  "serra-marmore": { title: "Serra Mármore Vonder SMV 1300S 1300W - Leve 2", priceCents: 9790 },
   "luminaria-1": { title: "Kit 2 Luminárias Poste Solar 2200W (Compre 1 Leve 2)", priceCents: 9700 },
   "luminaria-2": { title: "Kit 4 Luminárias Poste Solar 2200W (Compre 2 Leve 4)", priceCents: 13790 },
   "luminaria-3": { title: "Kit 6 Luminárias Poste Solar 2200W (Compre 3 Leve 6)", priceCents: 15790 },
