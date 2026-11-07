@@ -7,7 +7,7 @@ const CONFIG = {
     "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052212021&store=40661",
     "https://seguro.casadoconstrutor.site/api/public/shopify?product=68040052244789&store=40661"
   ],
-  precos: [97.00, 137.90, 157.90, 177.90], // preço de cada opção: Compre 1 Leve 2, Compre 2 Leve 4, Compre 3 Leve 6, Compre 4 Leve 8
+  precos: [109.90, 137.90, 157.90, 177.90], // preço de cada opção: Compre 1 Leve 2, Compre 2 Leve 4, Compre 3 Leve 6, Compre 4 Leve 8
   precoDeKit: 450.02,         // preço "de" de 1 kit (riscado); nas outras opções é multiplicado pela quantidade
   parcelas: 10,
   prazoMinDiasUteis: 5,       // entrega mais rápida (em dias úteis) -> TROQUE pelo seu prazo real
