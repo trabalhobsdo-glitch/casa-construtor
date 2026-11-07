@@ -14,6 +14,10 @@ export const OFFERS = {
     id: "ferramenta", name: "Kit 4 em 1 Ferramentas 48V", short: "1 kit com maleta",
     priceCents: 9790, qty: 1, img: "/ferramenta/assets/p1.webp", back: "/ferramenta/",
   },
+  "serra-marmore": {
+    id: "serra-marmore", name: "Serra Mármore Vonder SMV 1300S 1300W - Leve 2", short: "Leve 2 serras",
+    priceCents: 9790, qty: 2, img: "/serra-marmore/assets/p1.webp", back: "/serra-marmore/",
+  },
   "luminaria-1": {
     id: "luminaria-1", name: "Kit 2 Luminárias Poste Solar 2200W", short: "Compre 1 Leve 2 · 2 luminárias",
     priceCents: 9700, qty: 2, img: "/luminaria/assets/p1.webp", back: "/luminaria/",
