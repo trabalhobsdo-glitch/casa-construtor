@@ -9,6 +9,9 @@
 })();
 (function () {
   var META_PIXEL_IDS = ["1474529167889526", "1620017232920631", "4728552630800226"]; // pode ter vários pixels do Meta; todos recebem os mesmos eventos
+  // Pixel extra: só nas páginas da loja e dos produtos (NÃO carrega no checkout nativo).
+  var META_PIXEL_IDS_SEM_CHECKOUT = ["1554177723211171"];
+  if (!/^\/checkout/.test(location.pathname)) META_PIXEL_IDS = META_PIXEL_IDS.concat(META_PIXEL_IDS_SEM_CHECKOUT);
   var TIKTOK_PIXEL_ID = ""; // ex.: "ABCDEF1234567890"
 
   if (META_PIXEL_IDS.length) {
