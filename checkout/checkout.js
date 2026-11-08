@@ -35,6 +35,7 @@ function resolveOfferId() {
     return "luminaria-" + ([1, 2, 3, 4].includes(n) ? n : 1);
   }
   if (p === "serra-marmore") return "serra-marmore";
+  if (p === "lavadora") return "lavadora";
   return p === "ferramenta" ? "ferramenta" : null;
 }
 const offerId = resolveOfferId();
