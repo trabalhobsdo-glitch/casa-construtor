@@ -43,6 +43,7 @@
   var produto = null;
   if (path.indexOf("/ferramenta") === 0) produto = { content_name: "Kit 4 em 1 Ferramentas 48V", content_ids: ["ferramenta"], value: 97.9 };
   else if (path.indexOf("/serra-marmore") === 0) produto = { content_name: "Serra Mármore Vonder SMV 1300S - Leve 2", content_ids: ["serra-marmore"], value: 97.9 };
+  else if (path.indexOf("/lavadora") === 0) produto = { content_name: "Lavadora de Alta Pressão MOHOR 3800W", content_ids: ["lavadora"], value: 97.9 };
   else if (path.indexOf("/luminaria") === 0) produto = { content_name: "Kit Luminárias Poste Solar", content_ids: ["luminaria"] };
   if (produto) fb("track", "ViewContent", Object.assign({ content_type: "product", currency: "BRL" }, produto));
 
