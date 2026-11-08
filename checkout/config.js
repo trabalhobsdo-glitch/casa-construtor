@@ -14,6 +14,10 @@ export const OFFERS = {
     id: "ferramenta", name: "Kit 4 em 1 Ferramentas 48V", short: "1 kit com maleta",
     priceCents: 9790, qty: 1, img: "/ferramenta/assets/p1.webp", back: "/ferramenta/",
   },
+  lavadora: {
+    id: "lavadora", name: "Lavadora de Alta Pressão MOHOR 3800W 140 Bar", short: "1 lavadora com mangueira de 7 m",
+    priceCents: 9790, qty: 1, img: "/lavadora/assets/p1.webp", back: "/lavadora/",
+  },
   "serra-marmore": {
     id: "serra-marmore", name: "Serra Mármore Vonder SMV 1300S 1300W - Leve 2", short: "Leve 2 serras",
     priceCents: 9790, qty: 2, img: "/serra-marmore/assets/p1.webp", back: "/serra-marmore/",
