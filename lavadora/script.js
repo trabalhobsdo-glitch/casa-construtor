@@ -1,8 +1,7 @@
 /* ====== CONFIGURE AQUI ====== */
 const CONFIG = {
-  // Checkout próprio do site (já cadastrado em checkout/config.js e api/).
-  // Se preferir o checkout da Zedy, troque pelo link do produto, igual ao da ferramenta.
-  checkoutUrl: "/checkout/?p=lavadora",
+  // checkout da Zedy
+  checkoutUrl: "https://seguro.casadoconstrutor.site/api/public/shopify?product=68094976590133&store=40661",
   precoKit: 97.90
 };
 /* ============================ */
